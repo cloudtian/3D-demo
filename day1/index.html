@@ -1,0 +1,132 @@
+<html>
+    <head>
+        <style id="style">
+            #box {
+                width: 100px;
+                height: 100px;
+                margin: 200px auto;
+                perspective: 600px;
+            }
+
+            #outer, #inner {
+                transform-style: preserve-3d;
+                transform-origin: center; 
+                transform: rotateY(0deg);
+                transition: 6s; 
+                position: relative;
+            }
+        
+            #outer > div:not(#inner) {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100px;
+                height: 100px;
+                opacity: 0.4;
+                transition: 3s ease-out;
+            }
+
+            #inner {
+                position: relative;
+                top: 25px;
+                left: 25px;
+                width: 50px;
+                height: 50px;
+            }
+
+            #inner > div {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 50px;
+                height: 50px;
+                opacity: 0.4;
+            }
+
+            #box:hover #outer,
+            #box:hover #inner {
+                transform: rotateY(360deg);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="box">
+            <div id="outer">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div id="inner">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function getSixStyle(selector, size, scaleSelector) {
+                let halfSize = `${size / 2}px`;
+                let map = [{
+                    tranlate: `translateZ`,
+                    direct: '',
+                    rotate: 'rotateY(0deg)',
+                    color: 'blueviolet'
+                }, {
+                    tranlate: `translateX`,
+                    direct: '',
+                    rotate: 'rotateY(90deg)',
+                    color: 'red'
+                }, {
+                    tranlate: `translateZ`,
+                    direct: '-',
+                    rotate: 'rotateY(180deg)',
+                    color: 'yellow'
+                }, {
+                    tranlate: `translateX`,
+                    direct: '-',
+                    rotate: 'rotateY(-90deg)',
+                    color: 'green'
+                }, {
+                    tranlate: `translateY`,
+                    direct: '',
+                    rotate: 'rotateX(-90deg)',
+                    color: 'blue'
+                }, {
+                    tranlate: `translateY`,
+                    direct: '-',
+                    rotate: 'rotateX(90deg)',
+                    color: 'pink'
+                }];
+
+                let css = '';
+                for(let i = 1; i <= 6; i++) {
+                    let item = map[i-1];
+                    css += `
+                    ${selector} > div:nth-of-type(${i}) {
+                        transform: ${item.tranlate}(${item.direct}${halfSize}) ${item.rotate};
+                        background-color: ${item.color}
+                    }
+                    `
+                    if (scaleSelector) {
+                        css += `
+                        ${scaleSelector}:hover ${selector}  > div:nth-of-type(${i}) {
+                            transform: ${item.tranlate}(${item.direct}${size}px) ${item.rotate} scale(1.2);
+                        }
+                        `
+                    }
+                }
+                return css;
+            }
+
+            let style = document.querySelector('#style');
+
+            style.innerHTML += getSixStyle('#outer', 100, '#box') + getSixStyle('#inner', 50);
+        </script>
+    </body>
+</html>
