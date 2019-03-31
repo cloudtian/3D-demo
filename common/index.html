@@ -1,0 +1,177 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width,user-scalable=no">
+        <style id="style">
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .box {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+            }
+            .disZ, 
+            .backZ {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                transform-style: preserve-3d;
+            }
+            .cylinder {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                width: 120px;
+                height: 1170px;
+                margin-left: -64.5px;
+                margin-top: -585px;
+                transform-style: preserve-3d;
+            }
+            .cylinder div {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 120px;
+                height: 1170px;
+                background-size: cover;
+                backface-visibility: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="box">
+            <div class="disZ">
+                <div class="backZ">
+                    <div class="cylinder"></div>
+                </div>
+            </div>
+        </div>
+        <script src="./mTween.js"></script>
+        <script>
+        document.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+        }, {
+            passive: false
+        });
+
+        // 3D适配
+        (function () {
+            let box = document.querySelector('.box');
+            let disZ = document.querySelector('.disZ');
+            let backZ = document.querySelector('.backZ');
+            let deg = 50; // 固定视野角度
+            css(backZ, 'translateZ', -6000); // 可控制远近距离
+            window.addEventListener('resize', update);
+            update();
+            function update() {
+                let h = window.innerHeight; // 屏幕高度
+                let r = Math.tan(Math.PI / 180 * deg) * h / 2;// 景深值 
+                box.style.perspective = `${r}px`;
+                css(disZ, 'translateZ', r);
+            }
+        }());
+
+        // 圆柱体内视角生成
+        (function () {
+            // 20张图片
+            const count = 20;
+            let cylinder = document.querySelector('.cylinder');
+            let style = document.querySelector('#style');
+
+            // 计算圆柱体相关数据
+            let w = cylinder.clientWidth;// 每个面的宽度
+            let angle = 360 / count; // 外角
+            let deg = (180 - angle) / 2; // 内角
+            let rad = Math.PI / 180 * deg; // 内角弧度
+            let dis = Math.tan(rad) * w / 2;// 边心距
+
+            // 添加样式
+            let doc = '';
+            let css = '';
+            for (let i = 0; i < count; i++) {
+                doc += `<div></div>`;
+                css += `
+                .cylinder > div:nth-of-type(${i+1}) {
+                    background-image: url('./bg/${i+1}.png');
+                    transform: rotateY(-${angle * i}deg) translateZ(-${dis}px)
+                }
+                `;
+            }
+            cylinder.innerHTML = doc;
+            style.innerHTML += css;
+        }());
+        
+        // 动画
+        (function () {
+            let backZ = document.querySelector('.backZ');
+            let cylinder = document.querySelector('.cylinder');
+
+            css(cylinder, 'rotateY', -1080);
+            mTween({
+                el: cylinder,
+                attrs: {
+                    rotateY: 0
+                },
+                duration: 1600,
+                fx: 'easeBothStrong'
+            });
+            mTween({
+                el: backZ,
+                attrs: {
+                    translateZ: -300
+                },
+                duration: 1200,
+                fx: 'easeBothStrong'
+            });
+        }());
+
+        // 添加滑屏
+        (function () {
+            let backZ = document.querySelector('.backZ');
+            let cylinder = document.querySelector('.cylinder');
+
+            let startDeg = 0;
+            let startPoint = 0;
+            let viewDeg = 90; // 设置滑动一屏角度
+            let lastPoint = 0;
+            let lastTime = 0;
+            cylinder.addEventListener('touchstart', (e) => {
+                lastPoint = startDeg = css(cylinder, 'rotateY');
+                startPoint = e.changedTouches[0].pageX;
+                lastTime = Date.now();
+                mTween.stop(backZ);
+                mTween({
+                    el: backZ,
+                    attrs: {
+                        translateZ: -600
+                    },
+                    fx: 'easeOutStrong'
+                });
+            });
+            cylinder.addEventListener('touchmove', (e) => {
+                let nowPoint = e.changedTouches[0].pageX;
+                let dis = nowPoint - startPoint;
+                let disDeg = dis / window.innerWidth * viewDeg;
+                css(cylinder, 'rotateY', startDeg - disDeg);
+
+
+            });
+            cylinder.addEventListener('touchend', (e) => {
+                mTween.stop(backZ);
+                mTween({
+                    el: backZ,
+                    attrs: {
+                        translateZ: -300
+                    },
+                    fx: 'easeOutStrong'
+                });
+            })
+        }());
+        </script>
+    </body>
+</html>
