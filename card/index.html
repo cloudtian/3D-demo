@@ -1,0 +1,268 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width,user-scalable=no">
+        <style>
+            #app {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                perspective: 600px;
+            }
+            .box {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                margin: -320px 0 0 -400px;
+                width: 800px;
+                height: 640px;
+                transform-style: preserve-3d;
+            }
+            .box .box1 {
+                transform-style: preserve-3d;
+            }
+        </style>
+        <style id="style">
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <div class="box">
+                
+            </div>
+            <button>change</button>
+        </div>
+        <script src="../common/mTween.js"></script>
+        <script>
+            document.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+            }, {
+                passive: false
+            });
+            (function () {
+                let box = document.querySelector('.box');
+                let style = document.querySelector('#style');
+                let boxW = box.clientWidth;
+                let boxH = box.clientHeight;
+
+                
+                let imgsNum = 5;
+                let nowImg = 1;
+                let clickNum = 0;
+                
+                let triangle = {
+                    w: 200,
+                    h: 160,
+                    t: 10
+                };
+                let strip = {
+                    w: 80,
+                    h: boxH,
+                    t: 10
+                };
+                let animation = [animation1, animation2];
+                setBoxImage(nowImg);
+                let btns = document.querySelectorAll('button');
+                btns[0].onclick = function () {
+                    nextImg = nowImg + 1;
+                    if (nextImg > imgsNum) {
+                        nextImg = 1;
+                    }
+                    clickNum++;
+                    animation[clickNum%2]();
+                }
+
+                function addShape (shape) {
+                    // 长方形的宽高厚
+                    let {w, h, t} = shape;
+                    let columns = Math.floor(boxW / w);
+                    let rows = Math.floor(boxH / h);
+                    let num = rows * columns;
+
+                    let html = '';
+                    let css = getTriangleCss(w,h,t,'.box1');
+                    for (let i = 0; i < num; i++) {
+                        let column = i % columns;
+                        let row = Math.floor(i / columns);
+                        html += `
+                        <div class="box1">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        `; 
+                        css += `
+                        .box .box1:nth-child(${i+1}) {
+                            left: ${column*w}px;
+                            top: ${row*h}px;
+                        }
+                        .box .box1:nth-child(${i+1}) > span:nth-child(1)  {
+                            background-image: url(./img/${nowImg}.jpg);
+                            background-position: -${column*w}px -${row*h}px;
+                        }
+                        .box .box1:nth-child(${i+1}) > span:nth-child(3)  {
+                            background-image: url(./img/${nextImg}.jpg);
+                            background-position: -${column*w}px -${row*h}px;
+                        }
+                        `;
+                    }
+                    box.innerHTML = html;
+                    style.innerHTML = css;
+                }
+
+                function animation1 () {
+                    addShape(triangle);
+                    setBoxImage();
+                    css(box, 'translateZ', -5);
+                    let box1 = document.querySelectorAll('.box1');
+                    mTween({
+                        el: box,
+                        attrs: {
+                            translateZ: -50
+                        },
+                        fx: 'easeIn',
+                        duration: 500,
+                        cb () {
+                            Array.from(box1).forEach(item => {
+                                let time = (Math.random() * 1000);
+                                css(item, 'rotateY', 0);
+                                setTimeout(() => {
+                                    mTween({
+                                        el: item,
+                                        attrs: {
+                                            rotateY: 180
+                                        },
+                                        fx: 'backOut',
+                                        duration: 500
+                                    });
+                                }, time);
+                            });
+                            setTimeout(() => {
+                                mTween({
+                                    el: box,
+                                    attrs: {
+                                        translateZ: -5
+                                    },
+                                    fx: 'easeOut',
+                                    duration: 500,
+                                    cb () {
+                                        setBoxImage(nextImg);
+                                        nowImg = nextImg;
+                                        box.innerHTML = '';
+                                    }
+                                });
+                            }, 1500);
+                        }
+                    });
+                }
+
+                function animation2 () {
+                    addShape(strip);
+                    setBoxImage();
+                    css(box, 'translateZ', -5);
+                    let box1 = document.querySelectorAll('.box1');
+                    mTween({
+                        el: box,
+                        attrs: {
+                            translateZ: -50
+                        },
+                        fx: 'easeIn',
+                        duration: 500,
+                        cb () {
+                            let index = 0;
+                            let interval = setInterval(() => {
+                                if (index === box1.length) {
+                                    clearInterval(interval);
+                                    mTween({
+                                        el: box,
+                                        attrs: {
+                                            translateZ: -5
+                                        },
+                                        fx: 'easeOut',
+                                        duration: 500,
+                                        cb () {
+                                            setBoxImage(nextImg);
+                                            nowImg = nextImg;
+                                            box.innerHTML = '';
+                                        }
+                                    });
+                                    return;
+                                }
+                                css(box1[index], 'rotateY', 0);
+                                mTween({
+                                    el: box1[index],
+                                    attrs: {
+                                        rotateY: 180
+                                    },
+                                    fx: 'backOut',
+                                    duration: 500
+                                });
+                                index++;
+                            }, 50);
+                        }
+                    });
+
+                }
+                function setBoxImage (imgIndex) {
+                    box.style.backgroundImage = imgIndex ? `url(./img/${imgIndex}.jpg)` : '';
+                }
+                
+                function getTriangleCss (w,h,t,sel) {
+                    return `
+                    ${sel} {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: ${w};
+                        height: ${h};
+                        transform-origin: center center;
+                    }
+                    ${sel} > span {
+                        position: absolute;
+                        left: 0;
+                        right: 0;
+                        background-color: gray;
+                    }
+                    ${sel} > span:nth-child(1) {
+                        width: ${w}px;
+                        height: ${h}px;
+                        transform: translateZ(${t/2}px);
+                    }
+                    ${sel} > span:nth-child(2) {
+                        left: ${w-t}px;
+                        width: ${t}px;
+                        height: ${h}px;
+                        transform: translateX(${t/2}px) rotateY(90deg);
+                    }
+                    ${sel} > span:nth-child(3) {
+                        width: ${w}px;
+                        height: ${h}px;
+                        transform: translateZ(-${t/2}px) rotateY(180deg);
+                    }
+                    ${sel} > span:nth-child(4) {
+                        width: ${t}px;
+                        height: ${h}px;
+                        transform: translateX(-${t/2}px) rotateY(270deg);
+                    }
+                    ${sel} > span:nth-child(5) {
+                        width: ${w}px;
+                        height: ${t}px;
+                        transform: translateY(-${t/2}px) rotateX(-90deg);
+                    }
+                    ${sel} > span:nth-child(6) {
+                        top: ${h-t}px;
+                        width: ${w}px;
+                        height: ${t}px;
+                        transform: translateY(${t/2}px) rotateX(90deg);
+                    }
+                    `;
+                }
+            }());
+            
+        </script>
+    </body>
+</html>
