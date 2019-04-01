@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <style id="style">
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        #app {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .disZ {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+        /* 把wrap定位在中心 */
+        .wrap {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            margin: -124px 0 0 -170px;
+            width: 140px;
+            height: 248px;
+            transform-style: preserve-3d;
+        }
+        .wrap > div {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="disZ"> 
+            <div class="wrap"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+        }, {
+            passive: false
+        });
+
+        // 三角圆柱绘制
+        (function () {
+            const count = 3;
+            const cut = 10;
+            let wrap = document.querySelector('.wrap');
+            let style = document.querySelector('#style');
+            let html = '';
+            let css = '';
+
+            let w = wrap.offsetWidth;
+            let h = wrap.offsetHeight;
+            let deg = 360 / count; //外角
+            let r = Math.tan(Math.PI / 180 * ((180 - deg) / 2)) * w / 2;
+
+            let imgPercent = 100 / cut;
+            
+            for (let i = 0; i < count; i++) {
+                html += '<div>';
+                css += `
+                .wrap > div:nth-child(${i+1}) {
+                    transform: rotateY(${deg*i}deg) translateZ(${r}px);
+                }
+                `;
+                for (let j = 0; j < cut; j++) {
+                    html += '<div></div>';
+                    css += `
+                    .wrap > div:nth-child(${i+1}) > div:nth-child(${j+1}) {
+                        height: ${h / cut}px;
+                        background-image: url('./img/${i+1}.jpg');
+                        background-position: ${imgPercent * j}% ${imgPercent * (j+1)}%;
+                    }   
+                    `;
+                }
+
+                html += '</div>';
+            }
+            wrap.innerHTML = html;
+            style.innerHTML += css;
+        }());
+
+        // 3D适配
+        (function () {
+        }());
+        
+        // 动画效果
+        (function () {
+            let disZ = document.querySelector('disZ');
+            disZ.style.perspective = '600px';
+            document.addEventListener('touchstart', (e) => {
+                disZ.style.perspective = '700px';
+            });
+            document.addEventListener('touchmove', (e) => {
+                
+            });
+            document.addEventListener('touchend', (e) => {
+                disZ.style.perspective = '600px';
+            });
+        }());
+
+
+    </script>
+</body>
+</html>
